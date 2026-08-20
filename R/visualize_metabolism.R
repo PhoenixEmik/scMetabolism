@@ -26,21 +26,25 @@ DimPlot.metabolism <- function(obj, pathway, dimention.reduction.type = "umap", 
   if (dimention.reduction.type == "umap"){
 
     if (dimention.reduction.run == T) obj <- Seurat::RunUMAP(obj, reduction = "pca", dims = 1:40)
-    umap.loc<-obj@reductions$umap@cell.embeddings
+    umap.loc <- Seurat::Embeddings(obj, reduction = "umap")
 
-    row.names(umap.loc)<-colnames(obj)
-    signature_exp<-obj@assays$METABOLISM$score
+    signature_exp <- .get_metabolism_scores(obj)
 
     input.pathway <- pathway
 
-    signature_ggplot<-data.frame(umap.loc, t(signature_exp[input.pathway,]))
+    signature_ggplot <- data.frame(
+      umap.loc,
+      t(signature_exp[input.pathway, rownames(umap.loc), drop = FALSE])
+    )
+    colnames(signature_ggplot)[c(1, 2)] <- c("dimension_1", "dimension_2")
+    colnames(signature_ggplot)[3] <- "metabolism_score"
 
     library(wesanderson)
     pal <- wes_palette("Zissou1", 100, type = "continuous")
 
 
     library(ggplot2)
-    plot <- ggplot(data=signature_ggplot, aes(x=UMAP_1, y=UMAP_2, color = signature_ggplot[,3])) +  #this plot is great
+    plot <- ggplot(data=signature_ggplot, aes(x=dimension_1, y=dimension_2, color = metabolism_score)) +  #this plot is great
       geom_point(size = size) +
       scale_fill_gradientn(colours = pal) +
       scale_color_gradientn(colours = pal) +
@@ -56,20 +60,24 @@ DimPlot.metabolism <- function(obj, pathway, dimention.reduction.type = "umap", 
   #tsne
   if (dimention.reduction.type == "tsne"){
     if (dimention.reduction.run == T) obj <- Seurat::RunTSNE(obj, reduction = "pca", dims = 1:40)
-    tsne.loc<-obj@reductions$tsne@cell.embeddings
+    tsne.loc <- Seurat::Embeddings(obj, reduction = "tsne")
 
-    row.names(tsne.loc)<-colnames(obj)
-    signature_exp<-obj@assays$METABOLISM$score
+    signature_exp <- .get_metabolism_scores(obj)
 
     input.pathway <- pathway
 
-    signature_ggplot<-data.frame(tsne.loc, t(signature_exp[input.pathway,]))
+    signature_ggplot <- data.frame(
+      tsne.loc,
+      t(signature_exp[input.pathway, rownames(tsne.loc), drop = FALSE])
+    )
+    colnames(signature_ggplot)[c(1, 2)] <- c("dimension_1", "dimension_2")
+    colnames(signature_ggplot)[3] <- "metabolism_score"
 
     pal <- wes_palette("Zissou1", 100, type = "continuous")
 
 
     library(ggplot2)
-    plot <- ggplot(data=signature_ggplot, aes(x=tSNE_1, y=tSNE_2, color = signature_ggplot[,3])) +  #this plot is great
+    plot <- ggplot(data=signature_ggplot, aes(x=dimension_1, y=dimension_2, color = metabolism_score)) +  #this plot is great
       geom_point(size = size) +
       scale_fill_gradientn(colours = pal) +
       scale_color_gradientn(colours = pal) +
@@ -93,7 +101,7 @@ DotPlot.metabolism <- function(obj, pathway, phenotype, norm = "y"){
   input.parameter<-phenotype
 
   metadata<-obj@meta.data
-  metabolism.matrix <- obj@assays$METABOLISM$score
+  metabolism.matrix <- .get_metabolism_scores(obj)
 
   cat("\nPlease Cite: \nYingcheng Wu, Qiang Gao, et al. Cancer Discovery. 2021. \nhttps://pubmed.ncbi.nlm.nih.gov/34417225/   \n\n")
 
@@ -182,7 +190,7 @@ BoxPlot.metabolism <- function(obj, pathway, phenotype, ncol = 1){
   cat("\nPlease Cite: \nYingcheng Wu, Qiang Gao, et al. Cancer Discovery. 2021. \nhttps://pubmed.ncbi.nlm.nih.gov/34417225/   \n\n")
 
   metadata<-obj@meta.data
-  metabolism.matrix <- obj@assays$METABOLISM$score
+  metabolism.matrix <- .get_metabolism_scores(obj)
 
 
 
@@ -213,6 +221,4 @@ BoxPlot.metabolism <- function(obj, pathway, phenotype, ncol = 1){
     #theme_bw()+theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     NULL
 }
-
-
 
