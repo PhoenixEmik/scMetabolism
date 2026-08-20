@@ -9,7 +9,7 @@
 
 ## Requirements
     install.packages(c("devtools", "data.table", "wesanderson", "Seurat", "devtools", "AUCell", "GSEABase", "GSVA", "ggplot2","rsvd"))
-    devtools::install_github("YosefLab/VISION@v3.0.2") # Recommended; older VISION releases are not excluded
+    devtools::install_github("YosefLab/VISION@v3.0.2") # VISION v2.1.0 also works, but its older dependencies may fail to install in newer R environments
     
 
 ## Install
@@ -142,4 +142,3 @@ Copyright (C) 2020-2023 Gao Lab @ Fudan University.
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=wu-yc/scMetabolism&type=date&legend=top-left)](https://www.star-history.com/#wu-yc/scMetabolism&type=date&legend=top-left)
-
