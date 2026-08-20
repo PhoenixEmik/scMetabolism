@@ -7,10 +7,86 @@
 #' sc.metabolism.Seurat()
 #' @export sc.metabolism.Seurat
 
+.get_seurat_counts <- function(obj, assay = "RNA") {
+  assay_obj <- obj[[assay]]
+
+  if (is.null(assay_obj)) {
+    stop(sprintf("Assay '%s' was not found in the Seurat object.", assay), call. = FALSE)
+  }
+
+  # Seurat v5 stores expression matrices in layers.  A merged or integrated
+  # object can have several counts layers (for example, counts.sample1 and
+  # counts.sample2), which GetAssayData() cannot read as a single matrix.
+  if (inherits(assay_obj, "Assay5")) {
+    layers <- getExportedValue("SeuratObject", "Layers")(
+      assay_obj,
+      search = "^counts($|\\.)"
+    )
+
+    if (length(layers) == 0L) {
+      stop(sprintf("Assay '%s' does not contain a counts layer.", assay), call. = FALSE)
+    }
+
+    if (length(layers) > 1L) {
+      assay_obj <- getExportedValue("SeuratObject", "JoinLayers")(
+        assay_obj,
+        layers = "counts",
+        new = "counts"
+      )
+      layer <- "counts"
+    } else {
+      layer <- layers[[1L]]
+    }
+
+    return(getExportedValue("SeuratObject", "LayerData")(
+      assay_obj,
+      layer = layer
+    ))
+  }
+
+  # A Seurat v5 installation can still contain a v3-style Assay, but recent
+  # SeuratObject releases have made the old slot argument defunct.
+  seurat_object_namespace <- asNamespace("SeuratObject")
+  if (exists("LayerData", envir = seurat_object_namespace, inherits = FALSE)) {
+    return(getExportedValue("SeuratObject", "LayerData")(
+      assay_obj,
+      layer = "counts"
+    ))
+  }
+
+  # SeuratObject v4 does not provide LayerData(), so use its slot API.
+  Seurat::GetAssayData(obj, assay = assay, slot = "counts")
+}
+
+.set_metabolism_scores <- function(obj, signature_exp) {
+  seurat_object_namespace <- asNamespace("SeuratObject")
+
+  if (exists("CreateAssay5Object", envir = seurat_object_namespace,
+             inherits = FALSE)) {
+    create_assay5 <- getExportedValue("SeuratObject", "CreateAssay5Object")
+    suppressWarnings({
+      metabolism_assay <- create_assay5(data = as.matrix(signature_exp))
+      metabolism_assay$score <- as.matrix(signature_exp)
+      metabolism_assay$data <- NULL
+      obj[["METABOLISM"]] <- metabolism_assay
+    })
+  } else {
+    # Preserve the package's original representation with Seurat v4.
+    obj@assays$METABOLISM$score <- signature_exp
+  }
+
+  obj
+}
+
+.get_metabolism_scores <- function(obj) {
+  scores <- obj@assays$METABOLISM$score
+  data.frame(as.matrix(scores), check.names = FALSE)
+}
+
 
 sc.metabolism.Seurat <- function(obj, method = "VISION", imputation = F, ncores = 2, metabolism.type = "KEGG") {
 
-  countexp<-obj@assays$RNA@counts
+  countexp <- .get_seurat_counts(obj, assay = "RNA")
 
   countexp<-data.frame(as.matrix(countexp))
 
@@ -89,8 +165,5 @@ sc.metabolism.Seurat <- function(obj, method = "VISION", imputation = F, ncores 
   
   cat("\nPlease Cite: \nYingcheng Wu, Qiang Gao, et al. Cancer Discovery. 2021. \nhttps://pubmed.ncbi.nlm.nih.gov/34417225/   \n\n")
 
-  obj@assays$METABOLISM$score<-signature_exp
-  obj
+  .set_metabolism_scores(obj, signature_exp)
 }
-
-

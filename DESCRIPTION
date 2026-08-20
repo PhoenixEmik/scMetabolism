@@ -9,9 +9,9 @@ Description: scMetabolism aims to quantify the metabolic activity at the single 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: data.table, wesanderson, Seurat, VISION, AUCell, GSEABase,
+Imports: data.table, wesanderson, Seurat, SeuratObject, VISION, AUCell, GSEABase,
         GSVA, ggplot2, rsvd
-Suggests: testthat
+Suggests: Matrix, testthat
 RoxygenNote: 7.1.1
 NeedsCompilation: no
 Packaged: 2021-01-31 12:31:32 UTC; wuyingcheng
