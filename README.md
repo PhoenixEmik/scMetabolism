@@ -9,7 +9,7 @@
 
 ## Requirements
     install.packages(c("devtools", "data.table", "wesanderson", "Seurat", "devtools", "AUCell", "GSEABase", "GSVA", "ggplot2","rsvd"))
-    devtools::install_github("YosefLab/VISION@v2.1.0") #Please note that the version would be v2.1.0
+    devtools::install_github("YosefLab/VISION@v3.0.2") # Recommended; older VISION releases are not excluded
     
 
 ## Install
